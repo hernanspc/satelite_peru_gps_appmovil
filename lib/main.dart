@@ -28,7 +28,8 @@ void main() {
         ChangeNotifierProvider(create: (context) => ReportsService()),
         //Bloc para drawer
         BlocProvider(create: (context) => NavDrawerBloc()),
-        Provider(create: (context) => MqttService()..connect()),
+        ChangeNotifierProvider(
+            create: (context) => MqttService()..connect(context)),
       ],
       child: MyApp(),
     ),

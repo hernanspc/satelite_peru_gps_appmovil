@@ -118,8 +118,10 @@ class _HomeDrawerState extends State<HomeDrawer> {
   }
 
   void _logoutInApp() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? idEmpresa = prefs.getString('idEmpresa');
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // String? idEmpresa = prefs.getString('idEmpresa');
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final idEmpresa = await authService.userSession?.idEmpresa;
 
     AuthService.deleteToken();
     context.go('/login_screen');

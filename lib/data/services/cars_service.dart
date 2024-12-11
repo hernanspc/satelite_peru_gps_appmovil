@@ -31,6 +31,9 @@ class CarsService with ChangeNotifier {
 
     final data = {'id_usuario': idUsuario};
     final apiUrl = await Environment.apiUrl; // Resuelve la URL correcta
+    print('getAutos API URL: ${apiUrl}');
+    print('getAutos data : ${data}');
+
     try {
       var url = Uri.parse('${apiUrl}api/cars/getAutos');
       final resp = await http.post(

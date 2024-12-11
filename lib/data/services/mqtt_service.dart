@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'package:provider/provider.dart';
+import 'package:satelite_peru_gps/data/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MqttService {
+class MqttService with ChangeNotifier {
   MqttServerClient client =
       MqttServerClient.withPort('satelitem2m.pe', 'flutter_client', 1883);
 
@@ -27,7 +30,7 @@ class MqttService {
     client.keepAlivePeriod = 60;
     client.connectTimeoutPeriod = 10;
 
-    client.onDisconnected = onDisconnected;
+    client.onDisconnected = () => onDisconnected;
     client.onConnected = onConnected;
     client.onSubscribed = onSubscribed;
     client.pongCallback = pong;
@@ -36,7 +39,7 @@ class MqttService {
     // _startReconnectTimer();
   }
 
-  Future<void> connect() async {
+  Future<void> connect(BuildContext context) async {
     if (_isTryingToConnect ||
         client.connectionStatus?.state == MqttConnectionState.connected) {
       print('Ya estamos conectados o intentando conectar.');
@@ -52,24 +55,30 @@ class MqttService {
 
       client.connectionMessage = connMess;
 
-      try {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? idEmpresa = prefs.getString('idEmpresa');
-        // print('HPORMACHI MQTT: ${idEmpresa}');
+      // SharedPreferences prefs = await SharedPreferences.getInstance();
+      // String? idEmpresa = prefs.getString('idEmpresa');
 
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final idEmpresa = authService.userSession?.idEmpresa;
+
+      print('->idEmpresa: $idEmpresa');
+      if (idEmpresa == null) {
+        print('Error: idEmpresa no está disponible para suscribirse');
+        return; // Detenemos la conexión si no hay datos válidos
+      }
+
+      try {
         await client.connect();
         print('🔥 MqttService: Connected to satelitem2m.pe');
-        _isConnected = true; // Marcar como conectado
+        _isConnected = true;
 
-        // Una vez conectado, suscríbete al tema deseado
-        subscribe('capturador/data-vehiculo/${idEmpresa}');
+        // Suscribirse al tema
+        final topic = 'capturador/data-vehiculo/$idEmpresa';
+        subscribe(topic);
+        print('TE suscribiste a 🦀🦀 $topic');
         _reconnectTimer?.cancel();
-      } on NoConnectionException catch (e) {
-        print('MqttService: Connection failed - $e');
-        client.disconnect();
-      } on SocketException catch (e) {
-        print('MqttService: Socket exception - $e');
-        client.disconnect();
+      } catch (e) {
+        print('Error al conectar MQTT: $e');
       }
     }
     // if (_isConnected) {
@@ -107,10 +116,10 @@ class MqttService {
     print('MqttService: Subscription confirmed for topic $topic');
   }
 
-  void onDisconnected() {
+  void onDisconnected(BuildContext context) {
     print('MqttService: Disconnected from server');
     _isConnected = false;
-    _startReconnectTimer();
+    _startReconnectTimer(context);
   }
 
   void onConnected() {
@@ -127,13 +136,13 @@ class MqttService {
     _reconnectTimer?.cancel();
   }
 
-  void _startReconnectTimer() {
+  void _startReconnectTimer(BuildContext context) {
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult != ConnectivityResult.none) {
         print('Internet connection available. Trying to reconnect...');
-        connect();
+        connect(context);
       } else {
         print('No internet connection. Will retry in 10 seconds...');
       }

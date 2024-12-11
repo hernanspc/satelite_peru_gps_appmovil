@@ -45,7 +45,10 @@ class AuthService with ChangeNotifier {
   }
 
   void guardarDatosUsuario(
-      String email, String idEmpresa, String idUsuario) async {
+    String email,
+    String idEmpresa,
+    String idUsuario,
+  ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('email', email);
     await prefs.setString('idEmpresa', idEmpresa);
@@ -90,8 +93,14 @@ class AuthService with ChangeNotifier {
 
         await _saveToken(loginResponse.token);
         print('💥 your usersession: ${userSession}');
+        print('1)Se va guardar en Storage ${userSession!.email}');
+        print('2)Se va guardar en Storage ${userSession!.idEmpresa}');
+        print('3)Se va guardar en Storage ${userSession!.id}');
         guardarDatosUsuario(userSession!.email ?? '',
             '${userSession!.idEmpresa}', '${userSession!.id}');
+        print(
+            'Datos guardados en SharedPreferences: email=${userSession!.email}, idEmpresa=${userSession!.idEmpresa}, id=${userSession!.id}');
+
         print('💥 your token: ${userSession!.token}');
 
         return true;

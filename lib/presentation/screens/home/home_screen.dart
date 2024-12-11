@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:provider/provider.dart';
 import 'package:satelite_peru_gps/app_theme.dart';
+import 'package:satelite_peru_gps/data/services/auth_service.dart';
 import 'package:satelite_peru_gps/data/services/cars_service.dart';
 import 'package:satelite_peru_gps/data/services/mqtt_service.dart';
 import 'package:satelite_peru_gps/presentation/utils/format_data_without_capturator.dart';
@@ -36,8 +37,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _loadAutos() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? idUsuario = prefs.getString('idUsuario');
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // String? idUsuario = prefs.getString('idUsuario');
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final idUsuario = authService.userSession?.id;
+    print('->in _loadAutos ${idUsuario}');
 
     await _carsService.getAutos('${idUsuario.toString()}');
     setState(() {
@@ -76,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _connectToMqtt() async {
-    await _mqttService.connect();
+    await _mqttService.connect(context);
   }
 
   @override
