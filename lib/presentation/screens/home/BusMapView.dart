@@ -215,6 +215,63 @@ class _BusMapViewState extends State<BusMapView> with TickerProviderStateMixin {
                     );
                   },
                 ).toList()),
+
+              busSelectProvider.imagenConductor.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 120),
+                      child: MarkerLayer(
+                        markers: [
+                          Marker(
+                            rotate: true,
+                            width: 35,
+                            height: 35.0,
+                            point: markerBusInitial,
+                            child: GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      child: Stack(
+                                        children: [
+                                          InteractiveViewer(
+                                            child: Image.network(
+                                              busSelectProvider.imagenConductor,
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 8,
+                                            right: 8,
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.close,
+                                                color: Colors.black,
+                                                size: 24,
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(); // Cierra el diálogo
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: CircleAvatar(
+                                radius: 16,
+                                backgroundImage: NetworkImage(
+                                    busSelectProvider.imagenConductor),
+                                backgroundColor: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(),
               Padding(
                 padding: const EdgeInsets.only(bottom: 60),
                 child: MarkerLayer(
@@ -224,30 +281,35 @@ class _BusMapViewState extends State<BusMapView> with TickerProviderStateMixin {
                       width: 110,
                       height: 30.0,
                       point: markerBusInitial,
-                      child: Card(
-                        color: busSelectProvider.acc != null
-                            ? busSelectProvider.acc == 1
-                                ? darkMode
-                                    ? Colors.green.withOpacity(0.6)
-                                    : Colors.green[300]
-                                : darkMode
-                                    ? Colors.red.withOpacity(0.8)
-                                    : Colors.red[400]
-                            : Colors.grey,
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Text(
-                                '${busSelectProvider.velocidad} km/h',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
+                      child: Column(
+                        children: [
+                          Card(
+                            color: busSelectProvider.acc != null
+                                ? busSelectProvider.acc == 1
+                                    ? darkMode
+                                        ? Colors.green.withOpacity(0.6)
+                                        : Colors.green[300]
+                                    : darkMode
+                                        ? Colors.red.withOpacity(0.8)
+                                        : Colors.red[400]
+                                : Colors.grey,
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  Text(
+                                    '${busSelectProvider.velocidad} km/h',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],

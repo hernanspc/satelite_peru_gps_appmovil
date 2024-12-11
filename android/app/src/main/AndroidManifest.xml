@@ -11,7 +11,7 @@
         <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
-        android:label="satelite_peru_mibus"
+        android:label="App MiBus"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
         android:requestLegacyExternalStorage="true">

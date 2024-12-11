@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:provider/provider.dart';
 import 'package:satelite_peru_gps/data/global/environment.dart';
 import 'package:satelite_peru_gps/domains/models/authmodels/UserResponse.dart';
 import 'package:satelite_peru_gps/domains/models/authmodels/Usuario.dart';
@@ -158,23 +159,32 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<bool> isLoggedIn() async {
+  Future<bool> isLoggedIn(BuildContext context) async {
     final token = await this._storage.read(key: 'token') ?? '';
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedUserEmpresa = prefs.getString('empresa');
+    String? passwordTemp = prefs.getString('tempPassword');
+
     try {
       if (token.isNotEmpty) {
         // Verifica si el token ha expirado
         if (!JwtDecoder.isExpired(token)) {
           Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
           print('decodedToken: $decodedToken');
+
           // Asegúrate de que el token tenga la información que necesitas
           if (decodedToken.containsKey('password') &&
               decodedToken.containsKey('name')) {
             final usuario = decodedToken['name'];
             final password = decodedToken['password'];
 
-            // final reLoginOk =
-            //     await signIn(usuario, password, savedUserEmpresa!);
-            String? email = await getEmailFromSharedPreferences();
+            final authService =
+                Provider.of<AuthService>(context, listen: false);
+            await authService.signIn(
+              usuario.trim(),
+              passwordTemp ?? '',
+              savedUserEmpresa ?? '',
+            );
 
             if (password != null) {
               setEmail(email);

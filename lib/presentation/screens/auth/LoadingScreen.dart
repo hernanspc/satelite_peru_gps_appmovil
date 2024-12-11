@@ -40,7 +40,7 @@ class LoadingScreen extends StatelessWidget {
 
   Future checkLoginState(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
-    final autenticado = await authService.isLoggedIn();
+    final autenticado = await authService.isLoggedIn(context);
     if (autenticado) {
       return context.go('/home_screen');
     } else {
