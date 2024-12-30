@@ -533,7 +533,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                           ),
                                           Row(
                                             children: [
-                                              Icon(Icons.map_rounded, size: 16),
+                                              Icon(Icons.pin_drop, size: 16),
                                               SizedBox(width: 5),
                                               Text(
                                                 'Direccion:',

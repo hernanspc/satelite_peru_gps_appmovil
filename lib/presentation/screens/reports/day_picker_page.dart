@@ -71,6 +71,14 @@ class _DayPickerPageState extends State<DayPickerPage> {
     bool isLightMode = brightness == Brightness.light;
 
     dp.DatePickerRangeStyles styles = dp.DatePickerRangeStyles(
+      prevIcon: Icon(
+        Icons.chevron_left,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
+      nextIcon: Icon(
+        Icons.chevron_right,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
       displayedPeriodTitle: TextStyle(
         color: isLightMode ? Colors.black : Colors.white,
       ),

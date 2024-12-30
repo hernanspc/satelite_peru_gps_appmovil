@@ -59,6 +59,14 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
     bool isLightMode = brightness == Brightness.light;
 
     dp.DatePickerStyles styles = dp.DatePickerStyles(
+      prevIcon: Icon(
+        Icons.chevron_left,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
+      nextIcon: Icon(
+        Icons.chevron_right,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
       displayedPeriodTitle: TextStyle(
         color: isLightMode ? Colors.black : Colors.white,
       ),

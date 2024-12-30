@@ -75,6 +75,14 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
     bool isLightMode = brightness == Brightness.light;
 
     DatePickerRangeStyles styles = DatePickerRangeStyles(
+      prevIcon: Icon(
+        Icons.chevron_left,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
+      nextIcon: Icon(
+        Icons.chevron_right,
+        color: isLightMode ? Colors.black : Colors.white,
+      ),
       displayedPeriodTitle: TextStyle(
         color: isLightMode ? Colors.black : Colors.white,
       ),
