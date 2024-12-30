@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:satelite_peru_gps/data/services/cars_service.dart';
 import 'package:satelite_peru_gps/domains/models/autos_models/ReportsReponse.dart';
+import 'package:satelite_peru_gps/presentation/components/buttons/CustomShareButton.dart';
 import 'package:satelite_peru_gps/presentation/components/buttons/rounded_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:skeleton_loader/skeleton_loader.dart';
@@ -213,37 +214,6 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
       print("Excel file saved at $filePath");
     }
 
-    // Future<void> exportToPdf() async {
-    //   final pdf = pw.Document();
-
-    //   pdf.addPage(
-    //     pw.Page(
-    //       build: (pw.Context context) {
-    //         return pw.Table.fromTextArray(
-    //           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-    //           headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
-    //           data: reportData
-    //               .map(
-    //                 (item) => [
-    //                   item["placa"],
-    //                   '${item["reporte_fecha_desde"].toString().substring(0, 10)}\nhasta\n${_selectedPeriod!.end.toString().substring(0, 10).substring(0, 10)}',
-    //                   item["reporte_kilometraje"].toStringAsFixed(2),
-    //                   item["km_vuelta"],
-    //                 ],
-    //               )
-    //               .toList(),
-    //         );
-    //       },
-    //     ),
-    //   );
-
-    //   Directory directory = await getApplicationDocumentsDirectory();
-    //   String filePath = '${directory.path}/report.pdf';
-    //   File file = File(filePath);
-    //   file.writeAsBytesSync(await pdf.save());
-    //   OpenFile.open(filePath);
-    //   print("PDF file saved at $filePath");
-    // }
     Future<void> exportToPdf() async {
       final pdf = pw.Document();
 
@@ -254,16 +224,20 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
               cellStyle: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-              data: reportData
-                  .map(
-                    (item) => [
-                      item["placa"],
-                      item["reporte_fecha_desde"].toString().substring(0, 10),
-                      item["reporte_kilometraje"].toStringAsFixed(2),
-                      item["km_vuelta"],
-                    ],
-                  )
-                  .toList(),
+              data: reportData.map((item) {
+                final int vueltas = (item['reporte_kilometraje'] != null &&
+                        item['km_vuelta'] != null &&
+                        item['km_vuelta'] > 0)
+                    ? (item['reporte_kilometraje'] / item['km_vuelta']).floor()
+                    : 0;
+
+                return [
+                  item["placa"],
+                  '${item["reporte_fecha_desde"].toString().substring(0, 10)}\nhasta\n${_selectedPeriod!.end.toString().substring(0, 10).substring(0, 10)}',
+                  item["reporte_kilometraje"].toStringAsFixed(2),
+                  vueltas,
+                ];
+              }).toList(),
             );
           },
         ),
@@ -304,8 +278,6 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
             onSelectionError: _onSelectionError,
             eventDecorationBuilder: _eventDecorationBuilder,
             selectableDayPredicate: (DateTime day) {
-              // Aquí se establece el predicado para seleccionar semanas.
-              // Devuelve `false` para días en semanas futuras.
               return day.isBefore(_lastDate) || day.isAtSameMomentAs(_lastDate);
             },
           ),
@@ -314,12 +286,6 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // Text(
-                //   "Cambiar estilos",
-                //   style: Theme.of(context).textTheme.titleMedium,
-                // ),
-                // _stylesBlock(),
-                // _selectedBlock(),
                 RoundedButton(
                   isDisabled: _isLoading || isEqualsDateSelected ? true : false,
                   text: 'Buscar',
@@ -365,8 +331,9 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    _buildHeaderRow(),
-                                    ..._buildDataRows(placaVehiculo),
+                                    _buildHeaderRow(isLightMode),
+                                    ..._buildDataRows(
+                                        placaVehiculo, isLightMode),
                                   ],
                                 ),
                               ),
@@ -377,58 +344,26 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
                                       MainAxisAlignment.spaceAround,
                                   children: [
                                     Center(
-                                      child: ElevatedButton.icon(
+                                      child: CustomShareButton(
+                                        isLightMode: isLightMode,
                                         onPressed: () async {
                                           await exportToPdf();
                                         },
-                                        style: ElevatedButton.styleFrom(
-                                          iconColor: Colors
-                                              .blueAccent, // Color de fondo del botón
-                                          surfaceTintColor:
-                                              Colors.white, // Color del texto
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                20), // Bordes redondeados
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 24,
-                                              vertical:
-                                                  12), // Padding del botón
-                                        ),
-                                        icon: Icon(Icons.share,
-                                            size: 20), // Icono del botón
-                                        label: Text(
-                                          'Compartir',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                       ),
                                     ),
-                                    // ElevatedButton(
-                                    //   onPressed: exportToExcel,
-                                    //   // child: Icon(AntDesign.file_excel_fill),
-                                    //   child: const Icon(
-                                    //     Bootstrap.file_earmark_excel_fill,
-                                    //     color: Color(0xff1F6E46),
-                                    //   ),
-                                    // ),
-                                    // ElevatedButton(
-                                    //   onPressed: exportToPdf,
-                                    //   child: const Icon(
-                                    //     Bootstrap.file_pdf_fill,
-                                    //     color: Color(0xffC40607),
-                                    //   ),
-                                    // ),
                                   ],
                                 ),
                               )
                             ],
                           )
-                        : const Center(
+                        : Center(
                             child: Text(
-                                'Seleccione una fecha y haga click en buscar'),
+                              'Seleccione una fecha y haga click en buscar',
+                              style: TextStyle(
+                                color:
+                                    isLightMode ? Colors.black : Colors.white,
+                              ),
+                            ),
                           )
               ],
             ),
@@ -449,8 +384,12 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
     );
   }
 
-  Widget _buildHeaderRow() {
-    const styleTitle = TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold);
+  Widget _buildHeaderRow(bool isLightMode) {
+    final styleTitle = TextStyle(
+      fontSize: 14.0,
+      fontWeight: FontWeight.bold,
+      color: isLightMode ? Colors.black : Colors.white,
+    );
 
     return Row(
       children: [
@@ -462,7 +401,7 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
     );
   }
 
-  List<Widget> _buildDataRows(String placaVehiculo) {
+  List<Widget> _buildDataRows(String placaVehiculo, bool isLightMode) {
     return reportData.map((item) {
       int vueltas = (item['reporte_kilometraje'] / item['km_vuelta']).floor();
 
@@ -470,14 +409,21 @@ class _WeekPickerPageState extends State<WeekPickerPage> {
           DateTime.parse(item['reporte_fecha_desde'].toString());
       String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
 
-      const styleCampos = TextStyle(fontSize: 14.0);
+      final styleCampos = TextStyle(
+        fontSize: 14.0,
+        color: isLightMode ? Colors.black : Colors.white,
+      );
 
       return Row(
         children: [
-          _buildCell(placaVehiculo, textStyle: styleCampos, hideBottom: true),
+          _buildCell(
+            placaVehiculo,
+            textStyle: styleCampos,
+            hideBottom: true,
+          ),
           _buildCell(
               '${formattedDate}\nhasta\n${_selectedPeriod!.end.toString().substring(0, 10)}',
-              textStyle: TextStyle(fontSize: 12.0),
+              textStyle: styleCampos,
               hideBottom: true),
           _buildCell(item['reporte_kilometraje'].toStringAsFixed(2),
               textStyle: styleCampos, hideBottom: true),

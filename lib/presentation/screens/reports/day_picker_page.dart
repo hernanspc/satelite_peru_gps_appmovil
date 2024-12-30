@@ -1,13 +1,11 @@
 import 'dart:io';
 
 import 'package:excel/excel.dart' as xcel;
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_date_pickers/flutter_date_pickers.dart' as dp;
 import 'package:go_router/go_router.dart';
-import 'package:icons_plus/icons_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,12 +13,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:satelite_peru_gps/app_theme.dart';
 import 'package:satelite_peru_gps/data/services/cars_service.dart';
 import 'package:satelite_peru_gps/domains/models/autos_models/ReportsReponse.dart';
+import 'package:satelite_peru_gps/presentation/components/buttons/CustomShareButton.dart';
 import 'package:satelite_peru_gps/presentation/components/buttons/rounded_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:skeleton_loader/skeleton_loader.dart';
 
 import '../color_picker_dialog.dart';
-import '../color_selector_btn.dart';
 import '../event.dart';
 
 /// Page with [dp.DayPicker].
@@ -210,39 +208,6 @@ class _DayPickerPageState extends State<DayPickerPage> {
       }
     }
 
-    // Future<void> exportToPdf() async {
-    //   final pdf = pw.Document();
-
-    //   pdf.addPage(
-    //     pw.Page(
-    //       build: (pw.Context context) {
-    //         return pw.Table.fromTextArray(
-    //           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-    //           headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
-    //           cellStyle: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-    //           data: reportData
-    //               .map(
-    //                 (item) => [
-    //                   item["placa"],
-    //                   item["reporte_fecha_desde"].toString().substring(0, 10),
-    //                   item["reporte_kilometraje"].toStringAsFixed(2),
-    //                   item["km_vuelta"],
-    //                 ],
-    //               )
-    //               .toList(),
-    //         );
-    //       },
-    //     ),
-    //   );
-
-    //   Directory directory = await getApplicationDocumentsDirectory();
-    //   String filePath = '${directory.path}/report.pdf';
-    //   File file = File(filePath);
-    //   file.writeAsBytesSync(await pdf.save());
-    //   OpenFile.open(filePath);
-    //   print("PDF file saved at $filePath");
-    // }
-
     Future<void> exportToPdf() async {
       final pdf = pw.Document();
 
@@ -253,16 +218,31 @@ class _DayPickerPageState extends State<DayPickerPage> {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
               cellStyle: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-              data: reportData
-                  .map(
-                    (item) => [
-                      item["placa"],
-                      item["reporte_fecha_desde"].toString().substring(0, 10),
-                      item["reporte_kilometraje"].toStringAsFixed(2),
-                      item["km_vuelta"],
-                    ],
-                  )
-                  .toList(),
+              data: reportData.map((item) {
+                // Validación de datos
+                final String placa = item["placa"] ?? "N/A";
+                final String fecha = (item["reporte_fecha_desde"] != null &&
+                        item["reporte_fecha_desde"].toString().length >= 10)
+                    ? item["reporte_fecha_desde"].toString().substring(0, 10)
+                    : "N/A";
+                final String kilometraje =
+                    (item["reporte_kilometraje"] != null &&
+                            item["reporte_kilometraje"] is num)
+                        ? item["reporte_kilometraje"].toStringAsFixed(2)
+                        : "0.00";
+                final int vueltas = (item['reporte_kilometraje'] != null &&
+                        item['km_vuelta'] != null &&
+                        item['km_vuelta'] > 0)
+                    ? (item['reporte_kilometraje'] / item['km_vuelta']).floor()
+                    : 0;
+
+                return [
+                  placa,
+                  fecha,
+                  kilometraje,
+                  vueltas.toString(),
+                ];
+              }).toList(),
             );
           },
         ),
@@ -362,8 +342,9 @@ class _DayPickerPageState extends State<DayPickerPage> {
                                 ),
                                 child: Column(
                                   children: [
-                                    _buildHeaderRow(),
-                                    ..._buildDataRows(placaVehiculo),
+                                    _buildHeaderRow(isLightMode),
+                                    ..._buildDataRows(
+                                        placaVehiculo, isLightMode),
                                   ],
                                 ),
                               ),
@@ -374,33 +355,11 @@ class _DayPickerPageState extends State<DayPickerPage> {
                                       MainAxisAlignment.spaceAround,
                                   children: [
                                     Center(
-                                      child: ElevatedButton.icon(
+                                      child: CustomShareButton(
+                                        isLightMode: isLightMode,
                                         onPressed: () async {
                                           await exportToPdf();
                                         },
-                                        style: ElevatedButton.styleFrom(
-                                          iconColor: Colors
-                                              .blueAccent, // Color de fondo del botón
-                                          surfaceTintColor:
-                                              Colors.white, // Color del texto
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                20), // Bordes redondeados
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 24,
-                                              vertical:
-                                                  12), // Padding del botón
-                                        ),
-                                        icon: Icon(Icons.share,
-                                            size: 20), // Icono del botón
-                                        label: Text(
-                                          'Compartir',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                       ),
                                     ),
                                   ],
@@ -408,9 +367,14 @@ class _DayPickerPageState extends State<DayPickerPage> {
                               )
                             ],
                           )
-                        : const Center(
+                        : Center(
                             child: Text(
-                                'Seleccione una fecha y haga click en buscar'),
+                              'Seleccione una fecha y haga click en buscar',
+                              style: TextStyle(
+                                color:
+                                    isLightMode ? Colors.black : Colors.white,
+                              ),
+                            ),
                           ),
               ],
             ),
@@ -419,34 +383,6 @@ class _DayPickerPageState extends State<DayPickerPage> {
       ),
     );
   }
-
-// Text(
-//                   "Cambiar estilos",
-//                   style: Theme.of(context).textTheme.titleMedium,
-//                 ),
-//                 Padding(
-//                   padding: const EdgeInsets.symmetric(vertical: 12.0),
-//                   child: Row(
-//                     mainAxisSize: MainAxisSize.min,
-//                     children: <Widget>[
-//                       ColorSelectorBtn(
-//                         title: "Text",
-//                         color: selectedDateStyleColor,
-//                         showDialogFunction: _showSelectedDateDialog,
-//                         colorBtnSize: 42.0,
-//                       ),
-//                       SizedBox(
-//                         width: 12.0,
-//                       ),
-//                       ColorSelectorBtn(
-//                         title: "Background",
-//                         color: selectedSingleDateDecorationColor,
-//                         showDialogFunction: _showSelectedBackgroundColorDialog,
-//                         colorBtnSize: 42.0,
-//                       ),
-//                     ],
-//                   ),
-//                 ),
 
   Widget _buildSkeletonCell() {
     return Container(
@@ -459,8 +395,12 @@ class _DayPickerPageState extends State<DayPickerPage> {
     );
   }
 
-  Widget _buildHeaderRow() {
-    const styleTitle = TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold);
+  Widget _buildHeaderRow(bool isLightMode) {
+    final styleTitle = TextStyle(
+      fontSize: 14.0,
+      fontWeight: FontWeight.bold,
+      color: isLightMode ? Colors.black : Colors.white,
+    );
 
     return Row(
       children: [
@@ -472,7 +412,7 @@ class _DayPickerPageState extends State<DayPickerPage> {
     );
   }
 
-  List<Widget> _buildDataRows(String placaVehiculo) {
+  List<Widget> _buildDataRows(String placaVehiculo, bool isLightMode) {
     return reportData.map((item) {
       int vueltas = (item['reporte_kilometraje'] / item['km_vuelta']).floor();
 
@@ -480,13 +420,15 @@ class _DayPickerPageState extends State<DayPickerPage> {
           DateTime.parse(item['reporte_fecha_desde'].toString());
       String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
 
-      const styleCampos = TextStyle(fontSize: 14.0);
+      final styleCampos = TextStyle(
+        fontSize: 14.0,
+        color: isLightMode ? Colors.black : Colors.white,
+      );
 
       return Row(
         children: [
           _buildCell(placaVehiculo, textStyle: styleCampos, hideBottom: true),
-          _buildCell(formattedDate,
-              textStyle: TextStyle(fontSize: 12.0), hideBottom: true),
+          _buildCell(formattedDate, textStyle: styleCampos, hideBottom: true),
           _buildCell(item['reporte_kilometraje'].toStringAsFixed(2),
               textStyle: styleCampos, hideBottom: true),
           _buildCell(vueltas.toString(),

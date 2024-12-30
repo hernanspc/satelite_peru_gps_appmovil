@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:satelite_peru_gps/data/services/cars_service.dart';
 import 'package:satelite_peru_gps/domains/models/autos_models/ReportsReponse.dart';
+import 'package:satelite_peru_gps/presentation/components/buttons/CustomShareButton.dart';
 import 'package:satelite_peru_gps/presentation/components/buttons/rounded_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:skeleton_loader/skeleton_loader.dart';
@@ -180,37 +181,6 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
       print("Excel file saved at $filePath");
     }
 
-    // Future<void> exportToPdf() async {
-    //   final pdf = pw.Document();
-
-    //   pdf.addPage(
-    //     pw.Page(
-    //       build: (pw.Context context) {
-    //         return pw.Table.fromTextArray(
-    //           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-    //           headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
-    //           data: reportData
-    //               .map(
-    //                 (item) => [
-    //                   item["placa"],
-    //                   '${item["reporte_fecha_desde"].toString().substring(0, 10)}\nhasta\n${item["reporte_fecha_hasta"].toString().substring(0, 10)}',
-    //                   item["reporte_kilometraje"].toStringAsFixed(2),
-    //                   item["km_vuelta"],
-    //                 ],
-    //               )
-    //               .toList(),
-    //         );
-    //       },
-    //     ),
-    //   );
-
-    //   Directory directory = await getApplicationDocumentsDirectory();
-    //   String filePath = '${directory.path}/report.pdf';
-    //   File file = File(filePath);
-    //   file.writeAsBytesSync(await pdf.save());
-    //   OpenFile.open(filePath);
-    //   print("PDF file saved at $filePath");
-    // }
     Future<void> exportToPdf() async {
       final pdf = pw.Document();
 
@@ -221,16 +191,25 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               headers: ["Placa", "Fecha", "Km recorrido", "Vueltas"],
               cellStyle: pw.TextStyle(fontWeight: pw.FontWeight.normal),
-              data: reportData
-                  .map(
-                    (item) => [
-                      item["placa"],
-                      item["reporte_fecha_desde"].toString().substring(0, 10),
-                      item["reporte_kilometraje"].toStringAsFixed(2),
-                      item["km_vuelta"],
-                    ],
-                  )
-                  .toList(),
+              data: reportData.map((item) {
+                final int vueltas = (item['reporte_kilometraje'] != null &&
+                        item['km_vuelta'] != null &&
+                        item['km_vuelta'] > 0)
+                    ? (item['reporte_kilometraje'] / item['km_vuelta']).floor()
+                    : 0;
+
+                DateTime dateTime =
+                    DateTime.parse(item['reporte_fecha_desde'].toString());
+                String formattedDate =
+                    DateFormat('yyyy-MM-dd').format(dateTime);
+
+                return [
+                  item["placa"],
+                  '${formattedDate}\nhasta\n${item['reporte_fecha_hasta'].toString().substring(0, 10)}',
+                  item["reporte_kilometraje"].toStringAsFixed(2),
+                  vueltas,
+                ];
+              }).toList(),
             );
           },
         ),
@@ -274,31 +253,6 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // Text(
-                //   "Cambiar estilos",
-                //   style: Theme.of(context).textTheme.titleMedium,
-                // ),
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(vertical: 12.0),
-                //   child: Row(
-                //     mainAxisSize: MainAxisSize.min,
-                //     children: <Widget>[
-                //       ColorSelectorBtn(
-                //         title: "Texto",
-                //         color: selectedDateStyleColor,
-                //         showDialogFunction: _showSelectedDateDialog,
-                //         colorBtnSize: 21.0,
-                //       ),
-                //       const SizedBox(width: 12.0),
-                //       ColorSelectorBtn(
-                //         title: "Fondo",
-                //         color: selectedSingleDateDecorationColor,
-                //         showDialogFunction: _showSelectedBackgroundColorDialog,
-                //         colorBtnSize: 21.0,
-                //       ),
-                //     ],
-                //   ),
-                // ),
                 RoundedButton(
                   isDisabled: _isLoading || isEqualsDateSelected ? true : false,
                   text: 'Buscar',
@@ -344,8 +298,9 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
                                     ),
                                     child: Column(
                                       children: [
-                                        _buildHeaderRow(),
-                                        ..._buildDataRows(placaVehiculo),
+                                        _buildHeaderRow(isLightMode),
+                                        ..._buildDataRows(
+                                            placaVehiculo, isLightMode),
                                       ],
                                     ),
                                   ),
@@ -356,51 +311,13 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
                                           MainAxisAlignment.spaceAround,
                                       children: [
                                         Center(
-                                          child: ElevatedButton.icon(
+                                          child: CustomShareButton(
+                                            isLightMode: isLightMode,
                                             onPressed: () async {
                                               await exportToPdf();
                                             },
-                                            style: ElevatedButton.styleFrom(
-                                              iconColor: Colors
-                                                  .blueAccent, // Color de fondo del botón
-                                              surfaceTintColor: Colors
-                                                  .white, // Color del texto
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        20), // Bordes redondeados
-                                              ),
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 24,
-                                                  vertical:
-                                                      12), // Padding del botón
-                                            ),
-                                            icon: Icon(Icons.share,
-                                                size: 20), // Icono del botón
-                                            label: Text(
-                                              'Compartir',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
                                           ),
                                         ),
-                                        // ElevatedButton(
-                                        //   onPressed: exportToExcel,
-                                        //   // child: Icon(AntDesign.file_excel_fill),
-                                        //   child: const Icon(
-                                        //     Bootstrap.file_earmark_excel_fill,
-                                        //     color: Color(0xff1F6E46),
-                                        //   ),
-                                        // ),
-                                        // ElevatedButton(
-                                        //   onPressed: exportToPdf,
-                                        //   child: const Icon(
-                                        //     Bootstrap.file_pdf_fill,
-                                        //     color: Color(0xffC40607),
-                                        //   ),
-                                        // ),
                                       ],
                                     ),
                                   )
@@ -409,10 +326,15 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
                             : const Center(
                                 child: Text('No se encontraron datos'),
                               )
-                        : const Center(
+                        : Center(
                             child: Text(
-                                'Seleccione una fecha y haga click en buscar'),
-                          ),
+                              'Seleccione una fecha y haga click en buscar',
+                              style: TextStyle(
+                                color:
+                                    isLightMode ? Colors.black : Colors.white,
+                              ),
+                            ),
+                          )
                 // Agrega el SkeletonLoader en el lugar adecuado
               ],
             ),
@@ -433,8 +355,12 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
     );
   }
 
-  Widget _buildHeaderRow() {
-    const styleTitle = TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold);
+  Widget _buildHeaderRow(bool isLightMode) {
+    final styleTitle = TextStyle(
+      fontSize: 14.0,
+      fontWeight: FontWeight.bold,
+      color: isLightMode ? Colors.black : Colors.white,
+    );
 
     return Row(
       children: [
@@ -446,7 +372,7 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
     );
   }
 
-  List<Widget> _buildDataRows(String placaVehiculo) {
+  List<Widget> _buildDataRows(String placaVehiculo, bool isLightMode) {
     return reportData.map((item) {
       int vueltas = (item['reporte_kilometraje'] / item['km_vuelta']).floor();
 
@@ -454,14 +380,17 @@ class _MonthPickerPageState extends State<MonthPickerPage> {
           DateTime.parse(item['reporte_fecha_desde'].toString());
       String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
 
-      const styleCampos = TextStyle(fontSize: 14.0);
+      final styleCampos = TextStyle(
+        fontSize: 14.0,
+        color: isLightMode ? Colors.black : Colors.white,
+      );
 
       return Row(
         children: [
           _buildCell(placaVehiculo, textStyle: styleCampos, hideBottom: true),
           _buildCell(
             '${formattedDate}\nhasta\n${item['reporte_fecha_hasta'].toString().substring(0, 10)}',
-            textStyle: TextStyle(fontSize: 12.0),
+            textStyle: styleCampos,
             hideBottom: true,
           ),
           _buildCell(
