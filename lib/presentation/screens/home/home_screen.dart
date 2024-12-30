@@ -94,7 +94,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     var brightness = MediaQuery.of(context).platformBrightness;
     bool isLightMode = brightness == Brightness.light;
-    // final busSelectedProvider = Provider.of<CarsService>(context)?.selectedAuto;
 
     return Scaffold(
       appBar: AppBar(
@@ -186,6 +185,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
                     return Expanded(
                       child: RefreshIndicator(
+                        backgroundColor:
+                            isLightMode ? Colors.grey[200] : Color(0xff3A3B3C),
                         onRefresh: _loadAutos,
                         child: ListView.builder(
                           itemCount: filteredAutos.length,
@@ -287,9 +288,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                               //TODO: MODIFICAR FECHA_ENCENDIDO : FECHA_APAGADO
                                               Text(
                                                 '${auto.acc != null ? auto.acc == 1 ? formatFechaWithOutCapturador(auto.fechaEncendido ?? DateTime.now()) : formatFechaWithOutCapturador(auto.fechapagado ?? DateTime.now()) : ''}',
-                                                // '${auto.fechaTramaActual != null ? auto.fechaTramaActual : formatFechaWithOutCapturador(
-                                                //     auto.fecha ?? DateTime.now(),
-                                                //   )}',
                                                 style: TextStyle(
                                                   color: isLightMode == true
                                                       ? null
@@ -550,15 +548,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                               ),
                                             ],
                                           ),
-                                          // Text(
-                                          //   address ?? 'No disponible',
-                                          //   style: TextStyle(
-                                          //     fontSize: 15,
-                                          //     color: isLightMode == true
-                                          //         ? null
-                                          //         : Colors.white.withOpacity(0.8),
-                                          //   ),
-                                          // ),
                                           Text(
                                             address.isNotEmpty == true
                                                 ? address
@@ -585,12 +574,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                         children: [
                                           ElevatedButton(
                                             onPressed: () {
-                                              // print(
-                                              //     'HB HERNAN ${auto.idVehiculo} ${carsService.selectedAuto.idVehiculo}');
-                                              //RESETEAR SI ES DIFERENTE
-                                              // print(
-                                              //     'KIK ${carsService?.selectedAuto?.idVehiculo}');
-
                                               carsService.resetAutosHistorial();
                                               carsService.setSelectedAuto(auto);
 

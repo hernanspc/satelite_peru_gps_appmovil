@@ -2,6 +2,7 @@ import 'dart:ui';
 // import 'dart:math';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -552,13 +553,36 @@ class _BusMapViewState extends State<BusMapView> with TickerProviderStateMixin {
                               color: Colors.white70,
                             ),
                           ),
-                          Text(
-                            '${busSelectProvider.imeil}', // Valor simulado
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                '${busSelectProvider.imeil}', // Valor simulado
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.purple,
+                                ),
+                              ),
+                              SizedBox(
+                                  width:
+                                      8), // Espaciado entre el texto y el ícono
+                              GestureDetector(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(
+                                      text: '${busSelectProvider.imeil}'));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Se ha copiado: ${busSelectProvider.imeil}')),
+                                  );
+                                },
+                                child: Icon(
+                                  Icons.copy,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
